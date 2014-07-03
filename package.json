@@ -2,9 +2,11 @@
   "name": "HipsterScreensaver",
   "version": "0.0.0",
   "description": "The most hipsterest screensaver in the planet",
-  "main": "index.js",
+  "main": "app.js",
   "dependencies": {
-    "express": "^4.4.5"
+    "express": "^4.4.5",
+    "instagram-node": "^0.4.2",
+    "socket.io": "^1.0.6"
   },
   "devDependencies": {},
   "scripts": {
