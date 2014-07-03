@@ -1,0 +1,23 @@
+{
+  "name": "HipsterScreensaver",
+  "version": "0.0.0",
+  "description": "The most hipsterest screensaver in the planet",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.4.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AaronMorais/HipsterScreensaver.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AaronMorais/HipsterScreensaver/issues"
+  },
+  "homepage": "https://github.com/AaronMorais/HipsterScreensaver"
+}
