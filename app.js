@@ -8,7 +8,7 @@ api.use({
   client_secret: key.CLIENT_SECRET,
 });
 
-var url = "http://www.aaronmorais.com"
+var url = "http://aaronmorais.com:3000"
 var redirect_uri = url + '/handleauth';
 
 app.get('/authorize', function(req, res) {
@@ -25,7 +25,7 @@ app.get('/handleauth', function(req, res) {
       api.add_geography_subscription(48.565464564, 2.34656589, 100, url + '/geography/', function(err, result, limit) {
         console.log(err, result, limit);
       });
-      res.send('You made it!!');
+      res.send('Success');
     }
   });
 });
