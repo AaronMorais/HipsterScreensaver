@@ -30,8 +30,10 @@ app.get('/handleauth', function(req, res) {
   });
 });
 
+app.use(express.static(__dirname + '/static'));
+
 app.get('/', function(req, res){
-  res.send('Hello World');
+  res.sendfile(__dirname + '/static/views/index.html');
 });
 
 app.get('/geography', function(req, res) {
@@ -46,3 +48,46 @@ var port = process.env.PORT || 3000;
 var server = app.listen(port, function() {
     console.log('Listening on port %d', server.address().port);
 });
+
+var io = require('socket.io').listen(server);
+var clients = {};
+var locations = {};
+
+io.on('connection', function (socket) {
+	console.log("New Connection " + socket.id);
+	clients[socket.id] = socket;
+
+  	socket.on('subscribe', function (data) {
+  		var location = data['location'];
+    	console.log("Subscription Location: " + location);
+    	if (locations[location]) {
+    		locations[location].push(socket.id);
+    	} else {
+    		locations[location] = [socket.id];
+    	}
+  	});
+
+  	socket.on('disconnected', function (data) {
+		for (var j = 0; j < locations.length; j++) {
+  			var i = locations[j].indexOf(socket.id);
+			if(i != -1) {
+				locations[j].splice(i, 1);
+			}
+		}
+  	});
+});
+
+setInterval(function(){
+	broadcastDataForLocation('toronto', {"photos":["photoA", "photoB"]});
+}, 3000);
+
+
+function broadcastDataForLocation (location, data) {
+	console.log("Broadcasting for: " + location);
+	var subscribedClients = locations[location];
+	if (subscribedClients) {
+		for (var j = 0; j < subscribedClients.length; j++) {
+			clients[subscribedClients[j]].emit('photos', data);
+		}
+	}
+}
