@@ -132,6 +132,8 @@ function getCity(lat, lng) {
   return smallestCity;
 }
 
+Number.prototype.toRadians = function() { return this * Math.PI / 180; }
+
 function distance(lat1, lon1, lat2, lon2) {
   var R = 6371; // km
   var φ1 = lat1.toRadians();
