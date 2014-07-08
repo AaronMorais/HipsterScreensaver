@@ -1,8 +1,16 @@
 var express = require('express');
+var bodyParser = require('body-parser');
+
 var app = express();
 var api = require('instagram-node').instagram();
 var key = require('./key.js');
 var port = process.env.PORT || 3000;
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+app.use(bodyParser.json())
 
 var server = app.listen(port, function() {
     console.log('Listening on port %d', server.address().port);
@@ -12,7 +20,7 @@ var io = require('socket.io').listen(server);
 var clients = {};
 var locations = {};
 
-var url = "http://aaronmorais.com:3000"";
+var url = "http://aaronmorais.com:3000";
 var redirect_uri = url + '/handleauth';
 
 api.use({
@@ -30,7 +38,7 @@ app.get('/geography', function(req, res) {
 });
 
 app.post('/geography', function(req, res) {
-  console.log(req.body);
+  console.log(req.bod);
 });
 
 io.on('connection', function (socket) {
@@ -73,6 +81,8 @@ function broadcastDataForLocation (location, data) {
 	}
 }
 
+addLocation(35.657872, 139.70232);
+
 function addLocation(lat, lng) {
-  api.add_geography_subscription(lat, lng, 5000, url + '/geography');
+  api.add_geography_subscription(lat, lng, 5000, url + '/geography', function(err, result, limit) {});
 }
