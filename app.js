@@ -14,7 +14,6 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 var server = app.listen(port, function() {
-  console.log('Listening on port %d', server.address().port);
 });
 var io = require('socket.io').listen(server);
 
@@ -36,7 +35,6 @@ app.get('/', function(req, res){
 });
 
 app.get('/geography', function(req, res) {
-  console.log("Responding to subscription handshake: " + req.query['hub.challenge']);
   res.send(req.query['hub.challenge']);
 });
 
@@ -47,10 +45,7 @@ app.post('/geography', function(req, res) {
   }, function(error, response, body) {
     body = JSON.parse(body);
     body.data.forEach(function(data) {
-      console.log(data.filter);
-      console.log(data.images.standard_resolution);
       var location = getCity(data.location.latitude, data.location.longitude);
-      console.log(location);
       broadcastDataForLocation(location, data);
     });
   })
@@ -76,12 +71,10 @@ app.get('/supportedLocations', function(req, res) {
 
 io.on('connection', function (socket) {
 
-	console.log("New Connection " + socket.id);
 	clients[socket.id] = socket;
 
 	socket.on('subscribe', function (data) {
 		var location = data['location'];
-  	console.log("Subscription Location: " + location);
 
   	if (subscribed_locations[location]) {
   		subscribed_locations[location].push(socket.id);
@@ -102,11 +95,9 @@ io.on('connection', function (socket) {
 });
 
 setInterval(function() {
-  console.log(subscribed_locations);
 }, 5000);
 
 function broadcastDataForLocation (location, data) {
-	console.log("Broadcasting for: " + location);
 	var subscribedClients = subscribed_locations[location];
 	if (subscribedClients) {
 		for (var j = 0; j < subscribedClients.length; j++) {
@@ -122,9 +113,8 @@ function addLocation(lat, lng) {
 
 function getCity(lat, lng) {
   for (var city in supported_locations) {
-    if (supported_locations[city]["latitude"] - lat < 1 
-        && supported_locations[city]["longitude"] - lng < 1) {
-      console.log(city);
+    if (supported_locations[city]["latitude"] - lat < 20 
+        && supported_locations[city]["longitude"] - lng < 20) {
       return city; 
     }     
   }
