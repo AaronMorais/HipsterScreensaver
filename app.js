@@ -43,7 +43,10 @@ app.post('/geography', function(req, res) {
     uri: "https://api.instagram.com/v1/geographies/" + req.body[0]["object_id"] + "/media/recent?client_id=" + key.CLIENT_ID,
     method: "GET",
   }, function(error, response, body) {
-    console.log(body); 
+    body["data"].forEach(function(data) {
+      console.log(data["filter"]);
+      console.log(data["images"]["standard_resolution"]);
+    });
   })
 });
 
