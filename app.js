@@ -50,6 +50,22 @@ app.post('/geography', function(req, res) {
   })
 });
 
+var supported_locations = {
+  "Toronto" : {"latitude" : 43.7,
+               "longitude" : -79.4
+              },
+  "Seattle" : {"latitude" : 47.6097,
+               "longitude" : -122.331
+              },
+  "San Francisco" : {"latitude" : 37.7833,
+                     "longitude" : -122.4167
+              },
+}
+
+app.get('/supportedLocations', function(req, res) {
+  res.send(supported_locations);
+});
+
 io.on('connection', function (socket) {
 
 	console.log("New Connection " + socket.id);
