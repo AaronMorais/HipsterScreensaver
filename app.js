@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 var server = app.listen(port, function() {
-    console.log('Listening on port %d', server.address().port);
+  console.log('Listening on port %d', server.address().port);
 });
 var io = require('socket.io').listen(server);
 
@@ -43,9 +43,10 @@ app.post('/geography', function(req, res) {
     uri: "https://api.instagram.com/v1/geographies/" + req.body[0]["object_id"] + "/media/recent?client_id=" + key.CLIENT_ID,
     method: "GET",
   }, function(error, response, body) {
-    body["data"].forEach(function(data) {
-      console.log(data["filter"]);
-      console.log(data["images"]["standard_resolution"]);
+    body = JSON.parse(body);
+    body.data.forEach(function(data) {
+      console.log(data.filter);
+      console.log(data.images.standard_resolution);
     });
   })
 });
@@ -89,8 +90,6 @@ function broadcastDataForLocation (location, data) {
 		}
 	}
 }
-
-addLocation(35.657872, 139.70232);
 
 function addLocation(lat, lng) {
   api.add_geography_subscription(lat, lng, 5000, url + '/geography', function(err, result, limit) {});
