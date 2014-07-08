@@ -9,34 +9,15 @@ var server = app.listen(port, function() {
 });
 var io = require('socket.io').listen(server);
 
-var url = "http://aaronmorais.com:" + process.env.PORT || 3000;
+var clients = {};
+var locations = {};
+
+var url = "http://aaronmorais.com:3000"";
 var redirect_uri = url + '/handleauth';
 
 api.use({
   client_id: key.CLIENT_ID,
   client_secret: key.CLIENT_SECRET,
-});
-
-app.use(express.static(__dirname + '/static'));
-
-app.get('/authorize', function(req, res) {
-  res.redirect(api.get_authorization_url(redirect_uri));
-});
-
-app.get('/handleauth', function(req, res) {
-  api.authorize_user(req.query.code, redirect_uri, function(err, result) {
-    if (err) {
-      console.log(err.body);
-      res.send("Didn't work");
-    } else {
-      console.log('Yay! Access token is ' + result.access_token);
-      console.log("Testing a geography location");
-      api.add_geography_subscription(48.565464564, 2.34656589, 100, url + '/geography', function(err, result, limit) {
-        console.log(result, limit);
-      });
-      res.send('Success');
-    }
-  });
 });
 
 app.get('/', function(req, res){
@@ -49,11 +30,9 @@ app.get('/geography', function(req, res) {
 });
 
 app.post('/geography', function(req, res) {
-  console.log(req);
+  console.log(req.body);
 });
 
-var clients = {};
-var locations = {};
 io.on('connection', function (socket) {
 
 	console.log("New Connection " + socket.id);
@@ -92,4 +71,8 @@ function broadcastDataForLocation (location, data) {
 			clients[subscribedClients[j]].emit('photos', data);
 		}
 	}
+}
+
+function addLocation(lat, lng) {
+  api.add_geography_subscription(lat, lng, 5000, url + '/geography');
 }
