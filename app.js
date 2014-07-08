@@ -50,6 +50,7 @@ app.post('/geography', function(req, res) {
       console.log(data.filter);
       console.log(data.images.standard_resolution);
       var location = getCity(data.location.latitude, data.location.longitude);
+      console.log(location);
       broadcastDataForLocation(location, data);
     });
   })
@@ -85,9 +86,7 @@ io.on('connection', function (socket) {
   	if (subscribed_locations[location]) {
   		subscribed_locations[location].push(socket.id);
   	} else {
-      api.subscriptions(function(err, subscriptions, limit){
-        console.log(subscriptions);
-      };
+      addLocation(supported_locations[location]["latitude"], supported_locations[location]["longitude"]);
   		subscribed_locations[location] = [socket.id];
   	}
 	});
@@ -101,6 +100,10 @@ io.on('connection', function (socket) {
   	}
 	});
 });
+
+setInterval(function() {
+  console.log(subscribed_locations);
+}, 5000);
 
 function broadcastDataForLocation (location, data) {
 	console.log("Broadcasting for: " + location);
