@@ -40,12 +40,14 @@ app.get('/geography', function(req, res) {
 });
 
 app.post('/geography', function(req, res) {
+  console.log("Getting an image from subscription");
   request({
     uri: "https://api.instagram.com/v1/geographies/" + req.body[0]["object_id"] + "/media/recent?client_id=" + key.CLIENT_ID,
     method: "GET",
   }, function(error, response, body) {
     body = JSON.parse(body);
     if (!body.data) {
+      console.log("No body data");
       return; 
     }
     console.log("Data received");
@@ -119,7 +121,12 @@ function broadcastDataForLocation (location, data) {
 
 function addLocation(lat, lng) {
   api.add_geography_subscription(lat, lng, 5000,
-      url + '/geography', function(err, result, limit) {});
+      url + '/geography', function(err, result, limit) {
+    if (!err) {
+      console.log("Success subscribed!"); 
+    }
+    console.log(result);     
+  });
 }
 
 function getCity(lat, lng) {
