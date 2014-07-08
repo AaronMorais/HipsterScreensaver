@@ -1,5 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var request = require("request");
 
 var app = express();
 var api = require('instagram-node').instagram();
@@ -38,7 +39,12 @@ app.get('/geography', function(req, res) {
 });
 
 app.post('/geography', function(req, res) {
-  console.log(req.bod);
+  request({
+    uri: "https://api.instagram.com/v1/geographies/" + req.body[0]["object_id"] + "/media/recent?client_id=" + key.CLIENT_ID,
+    method: "GET",
+  }, function(error, response, body) {
+    console.log(body); 
+  })
 });
 
 io.on('connection', function (socket) {

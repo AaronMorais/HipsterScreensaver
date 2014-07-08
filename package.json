@@ -4,6 +4,7 @@
   "description": "The most hipsterest screensaver in the planet",
   "main": "app.js",
   "dependencies": {
+    "body-parser": "^1.4.3",
     "express": "^4.4.5",
     "instagram-node": "^0.4.2",
     "socket.io": "^1.0.6"
