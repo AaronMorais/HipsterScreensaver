@@ -48,8 +48,10 @@ app.post('/geography', function(req, res) {
     if (!body.data) {
       return; 
     }
+    console.log("Data received");
     body.data.forEach(function(data) {
       var location = getCity(data.location.latitude, data.location.longitude);
+      console.log(location);
       broadcastDataForLocation(location, data);
     });
   });
@@ -78,6 +80,7 @@ app.get("/delete", function(req, res) {
 
 app.get("/debug", function(req, res) {
   console.log(subscribed_locations);
+  res.send(200);
 });
 
 io.on('connection', function (socket) {
