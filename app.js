@@ -19,7 +19,7 @@ var server = app.listen(port, function() {
 var io = require('socket.io').listen(server);
 
 var clients = {};
-var locations = {};
+var subscribed_locations = {};
 
 var url = "http://aaronmorais.com:3000";
 var redirect_uri = url + '/handleauth';
@@ -55,34 +55,35 @@ io.on('connection', function (socket) {
 	console.log("New Connection " + socket.id);
 	clients[socket.id] = socket;
 
-  	socket.on('subscribe', function (data) {
-  		var location = data['location'];
-    	console.log("Subscription Location: " + location);
-    	if (locations[location]) {
-    		locations[location].push(socket.id);
-    	} else {
-    		locations[location] = [socket.id];
-    	}
-  	});
+	socket.on('subscribe', function (data) {
+		var location = data['location'];
+  	console.log("Subscription Location: " + location);
 
-  	socket.on('disconnected', function (data) {
-		for (var j = 0; j < locations.length; j++) {
-  			var i = locations[j].indexOf(socket.id);
-			if(i != -1) {
-				locations[j].splice(i, 1);
-			}
-		}
-  	});
+  	if (subscribed_locations[location]) {
+  		subscribed_locations[location].push(socket.id);
+  	} else {
+  		subscribed_locations[location] = [socket.id];
+  	}
+	});
+
+	socket.on('disconnected', function (data) {
+  	for (var j = 0; j < subscribed_locations.length; j++) {
+  			var i = subscribed_locations[j].indexOf(socket.id);
+  		if(i != -1) {
+  			subscribed_locations[j].splice(i, 1);
+  		}
+  	}
+	});
 });
 
 setInterval(function(){
-	broadcastDataForLocation('toronto', {"photos":["photoA", "photoB"]});
+	broadcastDataForLocation('Toronto', {"photos":["photoA", "photoB"]});
 }, 3000);
 
 
 function broadcastDataForLocation (location, data) {
 	console.log("Broadcasting for: " + location);
-	var subscribedClients = locations[location];
+	var subscribedClients = subscribed_locations[location];
 	if (subscribedClients) {
 		for (var j = 0; j < subscribedClients.length; j++) {
 			clients[subscribedClients[j]].emit('photos', data);
