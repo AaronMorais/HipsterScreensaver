@@ -29,6 +29,8 @@ api.use({
   client_secret: key.CLIENT_SECRET,
 });
 
+app.use(express.static(__dirname + '/static'));
+
 app.get('/', function(req, res){
   res.sendfile(__dirname + '/static/views/index.html');
 });
