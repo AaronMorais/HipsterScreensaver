@@ -39,6 +39,12 @@ app.get('/geography', function(req, res) {
   res.send(req.query['hub.challenge']);
 });
 
+app.get('/readsubscriptions', function(req, res) {
+  api.subscriptions(function(err, subscriptions, limit){
+    res.send(subscriptions);
+  };
+});
+
 app.post('/geography', function(req, res) {
   console.log("Getting an image from subscription");
   request({
