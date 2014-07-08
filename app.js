@@ -67,6 +67,8 @@ var supported_locations = {
               },
 }
 
+addLocation(43.7, -79.4);
+
 app.get('/supportedLocations', function(req, res) {
   res.send(supported_locations);
 });
@@ -83,6 +85,9 @@ io.on('connection', function (socket) {
   	if (subscribed_locations[location]) {
   		subscribed_locations[location].push(socket.id);
   	} else {
+      api.subscriptions(function(err, subscriptions, limit){
+        console.log(subscriptions);
+      };
   		subscribed_locations[location] = [socket.id];
   	}
 	});
@@ -96,11 +101,6 @@ io.on('connection', function (socket) {
   	}
 	});
 });
-
-setInterval(function(){
-	broadcastDataForLocation('Toronto', {"photos":["photoA", "photoB"]});
-}, 3000);
-
 
 function broadcastDataForLocation (location, data) {
 	console.log("Broadcasting for: " + location);
