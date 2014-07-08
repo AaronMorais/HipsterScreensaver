@@ -47,6 +47,8 @@ app.post('/geography', function(req, res) {
     body.data.forEach(function(data) {
       console.log(data.filter);
       console.log(data.images.standard_resolution);
+      var location = getCity(data.location.latitude, data.location.longitude);
+      broadcastDataForLocation(location, data);
     });
   })
 });
@@ -109,5 +111,16 @@ function broadcastDataForLocation (location, data) {
 }
 
 function addLocation(lat, lng) {
-  api.add_geography_subscription(lat, lng, 5000, url + '/geography', function(err, result, limit) {});
+  api.add_geography_subscription(lat, lng, 5000, 
+      url + '/geography', function(err, result, limit) {});
+}
+
+function getCity(lat, lng) {
+  for (var city in supported_locations) {
+    if (supported_locations[city]["latitude"] - lat < 1 
+        && supported_locations[city]["longitude"] - lng < 1) {
+      console.log(city);
+      return city; 
+    }     
+  }
 }
