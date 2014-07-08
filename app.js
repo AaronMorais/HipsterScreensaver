@@ -14,6 +14,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 var server = app.listen(port, function() {
+  console.log("Listening on port " + port);
 });
 var io = require('socket.io').listen(server);
 
@@ -44,11 +45,14 @@ app.post('/geography', function(req, res) {
     method: "GET",
   }, function(error, response, body) {
     body = JSON.parse(body);
+    if (!body.data) {
+      return; 
+    }
     body.data.forEach(function(data) {
       var location = getCity(data.location.latitude, data.location.longitude);
       broadcastDataForLocation(location, data);
     });
-  })
+  });
 });
 
 var supported_locations = {
@@ -63,10 +67,17 @@ var supported_locations = {
               },
 }
 
-addLocation(43.7, -79.4);
-
 app.get('/supportedLocations', function(req, res) {
   res.send(supported_locations);
+});
+
+app.get("/delete", function(req, res) {
+  api.del_subscription({ all: true }, function(err, subscriptions, limit){});
+  res.send(200);
+});
+
+app.get("/debug", function(req, res) {
+  console.log(subscribed_locations);
 });
 
 io.on('connection', function (socket) {
@@ -93,9 +104,6 @@ io.on('connection', function (socket) {
   	}
 	});
 });
-
-setInterval(function() {
-}, 5000);
 
 function broadcastDataForLocation (location, data) {
 	var subscribedClients = subscribed_locations[location];
