@@ -42,7 +42,7 @@ app.get('/geography', function(req, res) {
 app.get('/readsubscriptions', function(req, res) {
   api.subscriptions(function(err, subscriptions, limit){
     res.send(subscriptions);
-  };
+  });
 });
 
 app.post('/geography', function(req, res) {
@@ -117,10 +117,16 @@ io.on('connection', function (socket) {
 });
 
 function broadcastDataForLocation (location, data) {
+console.log(data.filter);
+	if (data.filter === "Normal" && false) {
+		console.log("WTF WHY NO FILTER");
+		return;
+	}
 	var subscribedClients = subscribed_locations[location];
 	if (subscribedClients) {
+		console.log("Broadcasting");
 		for (var j = 0; j < subscribedClients.length; j++) {
-			clients[subscribedClients[j]].emit('photos', data);
+			clients[subscribedClients[j]].emit('photos', data.images.standard_resolution.url);
 		}
 	}
 }
@@ -128,14 +134,15 @@ function broadcastDataForLocation (location, data) {
 function addLocation(lat, lng) {
   api.add_geography_subscription(lat, lng, 5000,
       url + '/geography', function(err, result, limit) {
+	 console.log(result);
     if (!err) {
       console.log("Success subscribed!"); 
     }
-    console.log(result);     
   });
 }
 
 function getCity(lat, lng) {
+	return "San Francisco";
   var smallestCity;
   var smallestDistance = -1;
   for (var city in supported_locations) {

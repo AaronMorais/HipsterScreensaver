@@ -1,8 +1,11 @@
 window.onload = function() {
+	var shown = [];
 	var url = "http://aaronmorais.com:3000"
 	var socket = io.connect(url);
 	socket.on('photos', function (data) {
-		console.log(data);
+		if (shown.indexOf(data) !== -1) { return; }
+		shown.push(data);
+		$("body").prepend("<img id=\"image\" src=\"" + data + "\" />");
 	});
 	$.get(
 	    "supportedLocations",
