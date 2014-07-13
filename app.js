@@ -78,12 +78,12 @@ io.on('connection', function (socket) {
 	clients[socket.id] = socket;
 
 	socket.on('subscribe', function (data) {
-		var location = subscribed_location(data['location']);
-  	if (location) {
-  		location.push(socket.id);
+		var location = data['location'];
+  	if (subscribed_locations[location]) {
+  		subscribed_locations[location].push(socket.id);
   	} else {
-      addLocation(location["latitude"], location["longitude"]);
-  		location = [socket.id];
+		addLocation(supported_locations[location]["latitude"], supported_locations[location]["longitude"]);
+   		subscribed_locations[location] = [socket.id];
   	}
 	});
 

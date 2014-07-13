@@ -5,7 +5,7 @@ function handleNewPhoto(data, shown) {
   $("body").prepend("<img id=\"image\" src=\"" + data + "\" />", function(content) {
     setTimeout(function() {
       $(this).remove(); 
-    }.bind(content)); 
+    }.bind(content), 2000); 
   });
 }
 
