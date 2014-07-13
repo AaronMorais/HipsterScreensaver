@@ -46,7 +46,6 @@ app.get('/readsubscriptions', function(req, res) {
 });
 
 app.post('/geography', function(req, res) {
-  console.log("Getting an image from subscription");
   request({
     uri: "https://api.instagram.com/v1/geographies/" 
       + req.body[0]["object_id"] + "/media/recent?client_id=" + key.CLIENT_ID,
@@ -54,13 +53,10 @@ app.post('/geography', function(req, res) {
   }, function(error, response, body) {
     body = JSON.parse(body);
     if (!body.data) {
-      console.log("No body data");
       return; 
     }
-    console.log("Data received");
     body.data.forEach(function(data) {
       var location = getCity(data.location.latitude, data.location.longitude);
-      console.log(location);
       broadcastDataForLocation(location, data);
     });
   });
@@ -102,7 +98,7 @@ io.on('connection', function (socket) {
   	if (subscribed_locations[location]) {
   		subscribed_locations[location].push(socket.id);
   	} else {
-      addLocation(supported_locations[location]["latitude"], supported_locations[location]["longitude"]);
+      		addLocation(supported_locations[location]["latitude"], supported_locations[location]["longitude"]);
   		subscribed_locations[location] = [socket.id];
   	}
 	});
@@ -118,14 +114,11 @@ io.on('connection', function (socket) {
 });
 
 function broadcastDataForLocation (location, data) {
-console.log(data.filter);
-	if (data.filter === "Normal" && false) {
-		console.log("WTF WHY NO FILTER");
+	if (data.filter === "Normal") {
 		return;
 	}
 	var subscribedClients = subscribed_locations[location];
 	if (subscribedClients) {
-		console.log("Broadcasting");
 		for (var j = 0; j < subscribedClients.length; j++) {
 			clients[subscribedClients[j]].emit('photos', data.images.standard_resolution.url);
 		}
@@ -135,9 +128,7 @@ console.log(data.filter);
 function addLocation(lat, lng) {
   api.add_geography_subscription(lat, lng, 5000,
       url + '/geography', function(err, result, limit) {
-	 console.log(result);
     if (!err) {
-      console.log("Success subscribed!"); 
     }
   });
 }

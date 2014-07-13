@@ -1,5 +1,6 @@
 // Handles the photos received frmo socket.io
-function handleNewPhoto(data) {
+function handleNewPhoto(data, shown) {
+console.log("Receiving a new photo");
   if (shown.indexOf(data) !== -1) { return; }
   shown.push(data);
   $("body").prepend("<img id=\"image\" src=\"" + data + "\" />");
@@ -8,36 +9,29 @@ function handleNewPhoto(data) {
 // Adds a list of cities to the dropdown
 function addSupportedLocations(data) {
   for (var city in data) {
-    $("#dropdownList").append(
-      $('li', {
-        role: "presentation",
-      }).append(
-        $('a', {
-          class: "location",
-          role: "menuitem",
-          tabindex="-1",
-        }).text(city), 
-      ),
-    );
+    var city_html = "<li role=\"presentation\"><a class=\"location\" role=\"menuitem\" tabindex=\"-1\">" + city + "</a></li>";
+    $("#dropdownList").append(city_html);
   }
 }
 
 window.onload = function() {
 	var shown = [];
-	var url = "http://aaronmorais.com:3000"
+	var url = "http://aaronmorais.com:3000";
 	var socket = io.connect(url);
-	socket.on('photos', handleNewPhoto);
+	socket.on('photos',function(data) {
+		handleNewPhoto(data, shown);
+	});
 
-  $('#dropdownButton').dropdown();
-	$.get(
-	  "supportedLocations",
-    addSupportedLocations,
-	);
+	$('#dropdownButton').dropdown();
+	$.get("supportedLocations", function(data) {
+		addSupportedLocations(data);
+		  $(".location").click(function() {
+		    socket.emit('subscribe', {"location" : this.text});
+			console.log("Subscribing");
+		    $(".dropdown").fadeOut("normal", function() {
+		      $(this).remove();
+		    });
+		  });
+	});
 
-  $(".location").click(function() {
-    socket.emit('subscribe', {"location" : this.text});
-    $(".dropdown").fadeOut("normal", function() {
-      $(this).remove();
-    });
-  });
 }
