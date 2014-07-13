@@ -1,17 +1,24 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var request = require("request");
+var supported_locations = require('./supportedLocations');
+var util = require('./util');
 
 var app = express();
 var api = require('instagram-node').instagram();
 var key = require('./key.js');
 var port = process.env.PORT || 3000;
 
-// parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }))
+var url = "http://aaronmorais.com:3000";
+var redirect_uri = url + '/handleauth';
 
-// parse application/json
+app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
+app.use(express.static(__dirname + '/static'));
+api.use({
+  client_id: key.CLIENT_ID,
+  client_secret: key.CLIENT_SECRET,
+});
 
 var server = app.listen(port, function() {
   console.log("Listening on port " + port);
@@ -21,15 +28,6 @@ var io = require('socket.io').listen(server);
 var clients = {};
 var subscribed_locations = {};
 
-var url = "http://aaronmorais.com:3000";
-var redirect_uri = url + '/handleauth';
-
-api.use({
-  client_id: key.CLIENT_ID,
-  client_secret: key.CLIENT_SECRET,
-});
-
-app.use(express.static(__dirname + '/static'));
 
 app.get('/', function(req, res){
   res.sendfile(__dirname + '/static/views/index.html');
@@ -62,18 +60,6 @@ app.post('/geography', function(req, res) {
   });
 });
 
-var supported_locations = {
-  "Toronto" : {"latitude" : 43.7,
-               "longitude" : -79.4
-              },
-  "Seattle" : {"latitude" : 47.6097,
-               "longitude" : -122.331
-              },
-  "San Francisco" : {"latitude" : 37.7833,
-                     "longitude" : -122.4167
-              },
-}
-
 app.get('/supportedLocations', function(req, res) {
   res.send(supported_locations);
 });
@@ -89,17 +75,15 @@ app.get("/debug", function(req, res) {
 });
 
 io.on('connection', function (socket) {
-
 	clients[socket.id] = socket;
 
 	socket.on('subscribe', function (data) {
-		var location = data['location'];
-
-  	if (subscribed_locations[location]) {
-  		subscribed_locations[location].push(socket.id);
+		var location = subscribed_location(data['location']);
+  	if (location) {
+  		location.push(socket.id);
   	} else {
-      		addLocation(supported_locations[location]["latitude"], supported_locations[location]["longitude"]);
-  		subscribed_locations[location] = [socket.id];
+      addLocation(location["latitude"], location["longitude"]);
+  		location = [socket.id];
   	}
 	});
 
@@ -125,6 +109,24 @@ function broadcastDataForLocation (location, data) {
 	}
 }
 
+function getCity(lat, lng) {
+  // For testing purpose
+  return "San Francisco";
+
+  var smallestCity;
+  var smallestDistance = 4294967295; ;
+  for (var city_name in supported_locations) {
+    var city = supported_locations[city];
+    var cityDistance = util.distance(lat, lng, 
+      city["latitude"], city["longitude"]);
+    if (cityDistance < smallestDistance) {
+      cityDistance = smallestDistance;
+      smallestCity = supported_locations[city];
+    }
+  }
+  return smallestCity;
+} 
+
 function addLocation(lat, lng) {
   api.add_geography_subscription(lat, lng, 5000,
       url + '/geography', function(err, result, limit) {
@@ -133,34 +135,3 @@ function addLocation(lat, lng) {
   });
 }
 
-function getCity(lat, lng) {
-	return "San Francisco";
-  var smallestCity;
-  var smallestDistance = -1;
-  for (var city in supported_locations) {
-    var cityDistance = distance(lat, lng, supported_locations[city]["latitude"],
-      supported_locations[city]["longitude"]);
-    if (cityDistance < smallestDistance) {
-      cityDistance = smallestDistance;
-      smallestCity = supported_locations[city];
-    }
-  }
-  return smallestCity;
-}
-
-Number.prototype.toRadians = function() { return this * Math.PI / 180; }
-
-function distance(lat1, lon1, lat2, lon2) {
-  var R = 6371; // km
-  var φ1 = lat1.toRadians();
-  var φ2 = lat2.toRadians();
-  var Δφ = (lat2-lat1).toRadians();
-  var Δλ = (lon2-lon1).toRadians();
-
-  var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-          Math.cos(φ1) * Math.cos(φ2) *
-          Math.sin(Δλ/2) * Math.sin(Δλ/2);
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-  var d = R * c;
-}
