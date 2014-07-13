@@ -48,7 +48,8 @@ app.get('/readsubscriptions', function(req, res) {
 app.post('/geography', function(req, res) {
   console.log("Getting an image from subscription");
   request({
-    uri: "https://api.instagram.com/v1/geographies/" + req.body[0]["object_id"] + "/media/recent?client_id=" + key.CLIENT_ID,
+    uri: "https://api.instagram.com/v1/geographies/" 
+      + req.body[0]["object_id"] + "/media/recent?client_id=" + key.CLIENT_ID,
     method: "GET",
   }, function(error, response, body) {
     body = JSON.parse(body);
@@ -146,7 +147,8 @@ function getCity(lat, lng) {
   var smallestCity;
   var smallestDistance = -1;
   for (var city in supported_locations) {
-    var cityDistance = distance(lat, lng, supported_locations[city]["latitude"], supported_locations[city]["longitude"]);
+    var cityDistance = distance(lat, lng, supported_locations[city]["latitude"],
+      supported_locations[city]["longitude"]);
     if (cityDistance < smallestDistance) {
       cityDistance = smallestDistance;
       smallestCity = supported_locations[city];
