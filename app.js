@@ -28,6 +28,67 @@ var io = require('socket.io').listen(server);
 var clients = {};
 var subscribed_locations = {};
 
+var RequestQueue = function() {
+  var queue = [];
+  var shown = [];
+  var isBusy = false;
+  var push = function(request) {
+    if (shown.indexOf(request.id) === -1) {
+      shown.push(request.id);
+    } else {
+      console.log(request.id+" was already registered", shown);
+      return;
+    }
+
+    console.log("Push", queue);
+    if (!request) {
+      return;
+    }
+
+    if (!isBusy) {
+      request.send();
+      isBusy = true;
+    } else {
+      queue.push(request);
+    }
+  };
+
+  var done = function() {
+    console.log("Done", queue);
+    if (queue.length === 0) {
+      isBusy = false;
+      return;
+    }
+
+    var request = queue.shift();
+    isBusy = true;
+    request.send();
+  };
+
+  return {
+    push: push,
+    done: done,
+  };
+}
+
+var IgRequest = function(req, CLIENT_ID, method, callback) {
+  console.log(req.body[0]["object_id"]);
+  var send = function() {
+    request({
+      uri: "https://api.instagram.com/v1/geographies/" + req.body[0]["object_id"] + "/media/recent?client_id=" + CLIENT_ID,
+      method: method
+    }, callback);
+  };
+  
+  return {
+    send: send,
+    id: req.body[0]["object_id"],
+  };
+}
+
+
+var queue = new RequestQueue();
+
 
 app.get('/', function(req, res){
   res.sendfile(__dirname + '/static/views/index.html');
@@ -44,20 +105,20 @@ app.get('/readsubscriptions', function(req, res) {
 });
 
 app.post('/geography', function(req, res) {
-  request({
-    uri: "https://api.instagram.com/v1/geographies/" 
-      + req.body[0]["object_id"] + "/media/recent?client_id=" + key.CLIENT_ID,
-    method: "GET",
-  }, function(error, response, body) {
-    body = JSON.parse(body);
-    if (!body.data) {
-      return; 
+  queue.push(new IgRequest(req, key.CLIENT_ID, "GET", 
+    function(error, response, body) {
+      body = JSON.parse(body);
+      if (body.data) {
+        body.data.forEach(function(data) {
+          var location = getCity(data.location.latitude, data.location.longitude);
+          broadcastDataForLocation(location, data);
+        });
+      } else {
+        console.log("No body data", body);
+      }
+      queue.done();
     }
-    body.data.forEach(function(data) {
-      var location = getCity(data.location.latitude, data.location.longitude);
-      broadcastDataForLocation(location, data);
-    });
-  });
+  ));
 });
 
 app.get('/supportedLocations', function(req, res) {
@@ -75,38 +136,40 @@ app.get("/debug", function(req, res) {
 });
 
 io.on('connection', function (socket) {
-	clients[socket.id] = socket;
+  clients[socket.id] = socket;
 
-	socket.on('subscribe', function (data) {
-		var location = data['location'];
-  	if (subscribed_locations[location]) {
-  		subscribed_locations[location].push(socket.id);
-  	} else {
-		addLocation(supported_locations[location]["latitude"], supported_locations[location]["longitude"]);
-   		subscribed_locations[location] = [socket.id];
-  	}
-	});
+  socket.on('subscribe', function (data) {
+    var location = data['location'];
+    if (subscribed_locations[location]) {
+      subscribed_locations[location].push(socket.id);
+    } else {
+      addLocation(supported_locations[location]["latitude"], supported_locations[location]["longitude"]);
+      subscribed_locations[location] = [socket.id];
+    }
+  });
 
-	socket.on('disconnected', function (data) {
-  	for (var j = 0; j < subscribed_locations.length; j++) {
-  			var i = subscribed_locations[j].indexOf(socket.id);
-  		if(i != -1) {
-  			subscribed_locations[j].splice(i, 1);
-  		}
-  	}
-	});
-});
+    socket.on('disconnected', function (data) {
+    for (var j = 0; j < subscribed_locations.length; j++) {
+                    var i = subscribed_locations[j].indexOf(socket.id);
+            if(i != -1) {
+                    subscribed_locations[j].splice(i, 1);
+            }
+    }
+    });
+  });
 
 function broadcastDataForLocation (location, data) {
-	if (data.filter === "Normal") {
-		return;
-	}
-	var subscribedClients = subscribed_locations[location];
-	if (subscribedClients) {
-		for (var j = 0; j < subscribedClients.length; j++) {
-			clients[subscribedClients[j]].emit('photos', data.images.standard_resolution.url);
-		}
-	}
+  console.log("Broadcasting");
+  if (data.filter === "Normal" && false) {
+    return;
+  }
+
+  var subscribedClients = subscribed_locations[location];
+  if (subscribedClients) {
+    for (var j = 0; j < subscribedClients.length; j++) {
+      clients[subscribedClients[j]].emit('photos', data.images.low_resolution.url);
+    }
+  }
 }
 
 function getCity(lat, lng) {
@@ -114,7 +177,7 @@ function getCity(lat, lng) {
   return "San Francisco";
 
   var smallestCity;
-  var smallestDistance = 4294967295; ;
+  var smallestDistance = 4294967295;
   for (var city_name in supported_locations) {
     var city = supported_locations[city];
     var cityDistance = util.distance(lat, lng, 
@@ -129,9 +192,11 @@ function getCity(lat, lng) {
 
 function addLocation(lat, lng) {
   api.add_geography_subscription(lat, lng, 5000,
-      url + '/geography', function(err, result, limit) {
-    if (!err) {
+    url + '/geography', function(err, result, limit) {
+      console.log(err, limit);
+      if (!err) {
+      }
     }
-  });
+  );
 }
 

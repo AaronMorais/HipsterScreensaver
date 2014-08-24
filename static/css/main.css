@@ -2,3 +2,8 @@ html {
     color: white;
     background-color: black;
 }
+
+body {
+  background-image: url('http://www.dmconfidential.com/wp-content/uploads/Instagram_Rainbow_Banner.png');
+  background-size: cover;
+}
